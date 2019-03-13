@@ -1,0 +1,9 @@
+trigrams = LOAD 's3://cse6242-2019spring-trigrams-big/*' AS (trigram:chararray, year:int, occurrences:int, books:int);
+trigrams_subset = LIMIT trigrams 100;
+trigramsGT = FILTER trigrams BY occurrences >= 400 AND books >=15;
+grouped = GROUP trigramsGT BY trigram;
+tricount = FOREACH grouped GENERATE $0,ROUND_TO((DOUBLE)SUM($1.occurrences)/SUM($1.books), 13) as Metric; 
+sorted = ORDER tricount BY $1 DESC, $0 ASC;
+sorted_subset = LIMIT sorted 20;
+DUMP sorted_subset;
+STORE sorted_subset INTO 's3://cseoan-schowdhury65-pig-small/output-big/' USING PigStorage ('\t');
